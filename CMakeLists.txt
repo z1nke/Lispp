@@ -20,3 +20,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(lispp
   lisp.cpp
 )
+
+if (MSVC)
+  target_compile_options(lispp PRIVATE /W4 /WX)
+else ()
+  target_compile_options(lispp PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif ()
