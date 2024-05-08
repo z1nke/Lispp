@@ -51,11 +51,11 @@ public:
   void dump();
 
 private:
-  void printDefs(std::ostream &os, const Map &defs);
+  static void printDefs(std::ostream &os, const Map &defs);
 
 private:
   Map defs;
-  Environment *parent;
+  Environment *parent = nullptr;
 };
 
 struct Unit {};
@@ -162,11 +162,8 @@ static bool lex(Token &tok) {
     // TODO: Other tokens.
     default:
       errorf("unknown character '%c'", static_cast<char>(ch));
-      break;
     }
   }
-
-  return false;
 }
 
 static Object *parseList();
@@ -179,10 +176,7 @@ static Object *parse(const Token &tok) {
     return parseList();
   default:
     errorf("unknown token");
-    break;
   }
-
-  return nullptr;
 }
 
 static Object *parse() {
