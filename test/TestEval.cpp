@@ -1,9 +1,15 @@
+#include "Common.h"
 #include "lisp.h"
 
-#include <gtest/gtest.h>
-
-TEST(TestEval, Unit) {
+void testUnit() {
   Environment env;
   const Object *unit = eval(read("()"), &env);
-  ASSERT_EQ("()", unit->toString());
+  UNIT_TEST("()", unit->toString());
+}
+
+int main() {
+  testUnit();
+  std::cout << testPass << "/" << testCount << " (passed "
+            << testPass * 100.0 / testCount << "%)" << std::endl;
+  return mainRet;
 }
