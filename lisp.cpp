@@ -85,9 +85,15 @@ struct Token {
   } kind;
 };
 
+static const char *stream = nullptr;
+
+static int getChar() {
+  return stream ? static_cast<int>(*stream++) : getchar();
+}
+
 static bool lex(Token &tok) {
   for (;;) {
-    int ch = std::cin.get();
+    int ch = getChar();
     switch (ch) {
     case ' ':
     case '\n':
@@ -147,11 +153,7 @@ static Object *parseList() {
 }
 
 const Object *read(const char *input) {
-  if (input != nullptr) {
-    std::string buf = input;
-    std::istringstream iss(buf);
-    std::cin.rdbuf(iss.seekg(0).rdbuf());
-  }
+  stream = input;
   return parse();
 }
 

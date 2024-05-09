@@ -9,7 +9,11 @@ function(add_test_target target)
     ${CMAKE_SOURCE_DIR}
     ${GTEST_INCLUDE_DIRS}
   )
-  add_test(NAME ${target} COMMAND ${target})
+  if (WIN32)
+    add_test(NAME ${target} COMMAND ${target}.exe)
+  else ()
+    add_test(NAME ${target} COMMAND ${target})
+  endif ()
 endfunction ()
 
 add_test_target(TestRead)
