@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 
 project(lispp
   VERSION 0.1.0
@@ -17,12 +17,28 @@ set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to conform to")
 # for use by clang_complete, YouCompleteMe, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(lispp
+add_library(lisp
   lisp.cpp
+)
+
+add_executable(lispp
+  main.cpp
+)
+
+target_link_libraries(lispp
+  PRIVATE
+  lisp
 )
 
 if (MSVC)
   target_compile_options(lispp PRIVATE /W4 /WX)
 else ()
   target_compile_options(lispp PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif ()
+
+
+option(LISPP_ENABLE_UNIT_TESTS "Unit tests" ON)
+if (LISPP_ENABLE_UNIT_TESTS)
+  enable_testing()
+  add_subdirectory(test)
 endif ()

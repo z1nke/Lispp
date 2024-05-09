@@ -1,9 +1,9 @@
+#include "lisp.h"
+
 #include <cstdarg>
-#include <iostream>
-#include <map>
 #include <memory>
-#include <string>
-#include <variant>
+#include <sstream>
+
 #include <vector>
 
 #if _WIN32
@@ -30,68 +30,6 @@
   va_end(ap);
   std::exit(1);
 }
-
-class Environment;
-class Object;
-
-class Environment {
-public:
-  // We use raw pointer + allocator to manage memory.
-  // And later try to implement GC.
-  using Map = std::map<std::string, Object *>;
-
-  Environment() = default;
-
-  /// \returns a pointer to the object associated with \p key if it exists,
-  /// otherwise nullptr.
-  Object *lookup(const std::string &key) const;
-  Object &operator[](const std::string &key);
-
-  void print(std::ostream &os);
-  void dump();
-
-private:
-  static void printDefs(std::ostream &os, const Map &defs);
-
-private:
-  Map defs;
-  Environment *parent = nullptr;
-};
-
-struct Unit {};
-struct Symbol {
-  std::string name;
-};
-struct Cell {
-  Object *car;
-  Object *cdr;
-};
-
-struct BuiltinFunc {
-  std::string name;
-  Object *params;
-  Object *env;
-};
-
-struct Lambda {
-  Object *params;
-  Object *body;
-  Environment *env;
-};
-
-class Object {
-public:
-  using Variant = std::variant<Unit, bool, int64_t, double, std::string, Symbol,
-                               Cell, BuiltinFunc, Lambda>;
-
-  Object(Unit) : data(Unit{}) {}
-  Object(bool b) : data(b) {}
-
-  const Variant &getData() const { return data; }
-
-private:
-  Variant data;
-};
 
 static Object nilobj{Unit{}};
 static Object *nil = &nilobj;
@@ -128,9 +66,15 @@ static std::ostream &operator<<(std::ostream &os, const Object &obj) {
   return os;
 }
 
+std::string Object::toString() const {
+  std::ostringstream oss;
+  oss << (*this);
+  return oss.str();
+}
+
 static void print(const Object *obj) { std::cout << *obj << '\n'; }
 
-static const Object *eval(const Object *ast, Environment *) { return ast; }
+const Object *eval(const Object *ast, Environment *) { return ast; }
 
 struct Token {
   enum Kind {
@@ -143,7 +87,7 @@ struct Token {
 
 static bool lex(Token &tok) {
   for (;;) {
-    int ch = getchar();
+    int ch = std::cin.get();
     switch (ch) {
     case ' ':
     case '\n':
@@ -202,10 +146,16 @@ static Object *parseList() {
   return list;
 }
 
-static const Object *read() { return parse(); }
+const Object *read(const char *input) {
+  if (input != nullptr) {
+    std::string buf = input;
+    std::istringstream iss(buf);
+    std::cin.rdbuf(iss.seekg(0).rdbuf());
+  }
+  return parse();
+}
 
-// Read-Eval-Print-Loop.
-void repl(Environment *env) {
+static void repl(Environment *env) {
   for (;;) {
     if (ISATTY(FILENO(stdin)))
       std::cout << ">> ";
@@ -213,10 +163,10 @@ void repl(Environment *env) {
   }
 }
 
-int main() {
+// Read-Eval-Print-Loop.
+void repl() {
   Environment globalEnv;
   repl(&globalEnv);
-  return 0;
 }
 
 Object &Environment::operator[](const std::string &key) { return *defs[key]; }
