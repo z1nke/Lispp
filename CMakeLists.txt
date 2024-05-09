@@ -30,9 +30,7 @@ target_link_libraries(lispp
   lisp
 )
 
-if (MSVC)
-  target_compile_options(lispp PRIVATE /W4 /WX)
-else ()
+if (NOT MSVC)
   target_compile_options(lispp PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif ()
 
