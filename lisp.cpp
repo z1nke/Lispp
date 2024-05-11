@@ -85,10 +85,36 @@ struct Token {
   } kind;
 };
 
+static bool hasStream = false;
 static const char *stream = nullptr;
 
 static int getChar() {
-  return stream ? static_cast<int>(*stream++) : getchar();
+  if (hasStream)
+    return stream ? static_cast<int>(*stream++) : EOF;
+
+  return getchar();
+}
+
+static int peek() {
+  if (hasStream)
+    return stream ? static_cast<int>(*stream) : EOF;
+
+  int ch = getchar();
+  ungetc(ch, stdin);
+  return ch;
+}
+
+static void skipComment() {
+  for (;;) {
+    int ch = getChar();
+    if (ch == EOF || ch == '\n')
+      return;
+    if (ch == '\r') {
+      if (peek() == '\n')
+        (void)getChar();
+      return;
+    }
+  }
 }
 
 static bool lex(Token &tok) {
@@ -99,6 +125,9 @@ static bool lex(Token &tok) {
     case '\n':
     case '\r':
     case '\t':
+      continue;
+    case ';':
+      skipComment();
       continue;
     case EOF:
       tok.kind = Token::TK_EOF;
@@ -153,6 +182,7 @@ static Object *parseList() {
 }
 
 const Object *read(const char *input) {
+  hasStream = input != nullptr;
   stream = input;
   return parse();
 }
